@@ -9,16 +9,15 @@ import java.time.LocalDate;
 @Entity
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "books")
 public class Book {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private long id;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -26,7 +25,7 @@ public class Book {
     @Column(name = "genre", nullable = false)
     private String genre;
 
-    @Column(name = "pages_number", nullable = false)
+    @Column(name = "pages_number", nullable = false, columnDefinition = "0")
     private int pagesNumber;
 
     @Column(name = "publishing_date", nullable = false)
@@ -35,7 +34,8 @@ public class Book {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "author", nullable = false)
-    private String author;
-
+    @ManyToOne
+    @JoinColumn(name = "author_id", nullable = false)
+    @JsonBackReference
+    private Author author;
 }
