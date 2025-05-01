@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="insert-into-author" author="lamarricane">
+        <insert tableName="authors">
+            <column name="name" value="J.R.R. Tolkien"/>
+            <column name="birth_date" value="1892-01-03"/>
+            <column name="location" value="England"/>
+            <column name="bio" value="English writer, poet, philologist, and academic, best known as the author of the high fantasy works The Hobbit and The Lord of the Rings."/>
+        </insert>
+
+        <insert tableName="authors">
+            <column name="name" value="Harper Lee"/>
+            <column name="birth_date" value="1926-04-28"/>
+            <column name="location" value="United States"/>
+            <column name="bio" value="American novelist best known for her 1960 novel To Kill a Mockingbird."/>
+        </insert>
+
+        <insert tableName="authors">
+            <column name="name" value="George Orwell"/>
+            <column name="birth_date" value="1903-06-25"/>
+            <column name="location" value="England"/>
+            <column name="bio" value="English novelist, essayist, journalist and critic, best known for his novels Animal Farm and Nineteen Eighty-Four."/>
+        </insert>
+
+        <insert tableName="authors">
+            <column name="name" value="F. Scott Fitzgerald"/>
+            <column name="birth_date" value="1896-09-24"/>
+            <column name="location" value="United States"/>
+            <column name="bio" value="American novelist, essayist, screenwriter, and short-story writer, best known for his novels depicting the flamboyance and excess of the Jazz Age."/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

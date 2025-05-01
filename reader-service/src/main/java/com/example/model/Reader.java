@@ -19,9 +19,13 @@ public class Reader {
     private long id;
 
     @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    private UUID user;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @Column(name = "book_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 }
+
+
+
+

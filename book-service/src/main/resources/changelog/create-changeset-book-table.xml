@@ -6,11 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="create_table_book" author="lamarricane">
-        <createTable tableName="book">
+        <createTable tableName="books">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="name" type="varchar(255)">
+            <column name="title" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="genre" type="varchar(255)">
@@ -23,11 +23,20 @@
                 <constraints nullable="false"/>
             </column>
             <column name="description" type="text">
-                <constraints nullable="false"/>
             </column>
-            <column name="author" type="varchar(255)">
+            <column name="author_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="add_foreign_key_to_book" author="lamarricane">
+        <addForeignKeyConstraint
+                baseTableName="books"
+                baseColumnNames="author_id"
+                constraintName="fk_book_author"
+                referencedTableName="authors"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
     </changeSet>
 </databaseChangeLog>

@@ -6,44 +6,44 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="insert-into-wallet" author="lamarricane">
-        <insert tableName="book">
-            <column name="name" value="The Lord of the Rings"/>
+        <insert tableName="books">
+            <column name="title" value="The Lord of the Rings"/>
             <column name="genre" value="Fantasy"/>
             <column name="pages_number" value="1178"/>
             <column name="publishing_date" value="1954-07-29"/>
             <column name="description"
                     value="Epic high-fantasy novel written by English author and scholar J. R. R. Tolkien."/>
-            <column name="author" value="J.R.R. Tolkien"/>
+            <column name="author_id" value="1"/>
         </insert>
 
-        <insert tableName="book">
-            <column name="name" value="To Kill a Mockingbird"/>
+        <insert tableName="books">
+            <column name="title" value="To Kill a Mockingbird"/>
             <column name="genre" value="Novel"/>
             <column name="pages_number" value="281"/>
             <column name="publishing_date" value="1960-07-11"/>
             <column name="description"
                     value="Novel by Harper Lee published in 1960. It was immediately successful, winning the Pulitzer Prize."/>
-            <column name="author" value="Harper Lee"/>
+            <column name="author_id" value="2"/>
         </insert>
 
-        <insert tableName="book">
-            <column name="name" value="1984"/>
+        <insert tableName="books">
+            <column name="title" value="1984"/>
             <column name="genre" value="Dystopian"/>
             <column name="pages_number" value="328"/>
             <column name="publishing_date" value="1949-06-08"/>
             <column name="description"
                     value="Dystopian social science fiction novel by English novelist George Orwell."/>
-            <column name="author" value="George Orwell"/>
+            <column name="author_id" value="3"/>
         </insert>
 
-        <insert tableName="book">
-            <column name="name" value="The Great Gatsby"/>
+        <insert tableName="books">
+            <column name="title" value="The Great Gatsby"/>
             <column name="genre" value="Tragedy"/>
             <column name="pages_number" value="180"/>
             <column name="publishing_date" value="1925-04-10"/>
             <column name="description"
                     value="Novel by American writer F. Scott Fitzgerald. Set in the Jazz Age on Long Island."/>
-            <column name="author" value="F. Scott Fitzgerald"/>
+            <column name="author_id" value="1"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

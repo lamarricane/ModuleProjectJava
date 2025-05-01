@@ -1,0 +1,36 @@
+services:
+  book-db:
+    image: postgres:16
+    container_name: postgres_cont_catalog
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4221
+      POSTGRES_DB: catalog_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d catalog_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  book-service-image:
+    build:
+      context: .
+      dockerfile: book-service/Dockerfile
+    container_name: back_cont_book-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://book-db:5432/catalog_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 4221
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8083:8083"
+    depends_on:
+      book-db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
