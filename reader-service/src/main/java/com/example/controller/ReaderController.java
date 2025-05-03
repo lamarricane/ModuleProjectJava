@@ -1,41 +1,52 @@
 package com.example.controller;
 
-import com.example.dto.ReaderRequest;
-import com.example.dto.ReaderResponse;
-import com.example.model.Token;
+
+import com.example.model.Reader;
 import com.example.service.ReaderService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import com.example.service.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/readers")
 public class ReaderController {
 
     private final ReaderService readerService;
+    private final UserService userService;
 
-    public ReaderController(ReaderService readerService){
+    public ReaderController(ReaderService readerService, UserService userService){
         this.readerService = readerService;
+        this.userService = userService;
     }
 
-    @PostMapping(value = "/create",consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    public void createReader(@RequestBody ReaderRequest readerRequest) {
-        readerService.createReader(readerRequest);
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ReaderResponse> getReaders(@RequestBody Token token) {
-        return readerService.getAllReadersByUser(token.getId());
+    @PostMapping("/books/{bookId}")
+    public ResponseEntity<Reader> addBookToRead(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long bookId) {
+        UUID userId = userService.findByUsername(userDetails.getUsername()).getId();
+        Reader reader = readerService.addBookToRead(userId, bookId);
+        return ResponseEntity.ok(reader);
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ReaderResponse> getAllReaders(){
-        return readerService.getAllReaders();
+    public ResponseEntity<List<Reader>> getReadBooks(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = userService.findByUsername(userDetails.getUsername()).getId();
+        List<Reader> readers = readerService.getReadBooks(userId);
+        return ResponseEntity.ok(readers);
+    }
+
+    @DeleteMapping("/books/{bookId}")
+    public ResponseEntity<Void> removeBookFromRead(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long bookId) {
+        UUID userId = userService.findByUsername(userDetails.getUsername()).getId();
+        readerService.removeBookFromRead(userId, bookId);
+        return ResponseEntity.noContent().build();
     }
 }
-

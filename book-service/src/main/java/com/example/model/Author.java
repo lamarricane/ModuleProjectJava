@@ -23,10 +23,12 @@ public class Author {
     @Column(name = "id", nullable = false)
     private long id;
 
+    @Getter
     @NotBlank
     @Column(name = "name", nullable = false)
     private String name;
 
+    @NotBlank
     @Past
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "birth_date", nullable = false, columnDefinition = "DATE")

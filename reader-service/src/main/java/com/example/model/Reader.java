@@ -10,7 +10,8 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "readers")
+@Table(name = "readers", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "book_id"}, name = "uk_user_book")})
 public class Reader {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,9 +20,9 @@ public class Reader {
     private long id;
 
     @Column(name = "user_id", nullable = false)
-    private UUID user;
+    private UUID userId;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 }

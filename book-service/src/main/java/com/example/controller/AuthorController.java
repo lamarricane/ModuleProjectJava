@@ -4,7 +4,7 @@ import com.example.dto.AuthorRequest;
 import com.example.model.Author;
 import com.example.service.AuthorService;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/catalog/authors")
@@ -23,7 +24,7 @@ public class AuthorController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createAuthor(@RequestBody AuthorRequest authorRequest) {
+    public ResponseEntity<String> createAuthor(@Valid @RequestBody AuthorRequest authorRequest) {
         try {
             Author author = authorService.convertToAuthor(authorRequest);
             authorService.createAuthor(author);
@@ -36,7 +37,7 @@ public class AuthorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateAuthor(@PathVariable long id, @RequestBody AuthorRequest authorRequest) {
+    public ResponseEntity<String> updateAuthor(@Valid @PathVariable long id, @RequestBody AuthorRequest authorRequest) {
         try {
             Author author = authorService.convertToAuthor(authorRequest);
             authorService.update(id, author);
@@ -56,6 +57,16 @@ public class AuthorController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(e.getMessage());
         }
+    }
+
+    @GetMapping
+    public Page<Author> getAllAuthors(Pageable pageable) {
+        return authorService.getAllAuthors(pageable);
+    }
+
+    @GetMapping("/{id}")
+    public Optional<Author> getAuthorById(@PathVariable long id) {
+        return authorService.getAuthorById(id);
     }
 
     @GetMapping("/location/{location}")

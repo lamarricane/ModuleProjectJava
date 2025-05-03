@@ -1,6 +1,7 @@
 package com.example.service;
 
 import com.example.dto.BookRequest;
+import com.example.model.Author;
 import com.example.model.Book;
 import com.example.repository.AuthorRepository;
 import com.example.repository.BookRepository;
@@ -25,6 +26,9 @@ public class BookService {
 
     @Transactional
     public void createBook(Book book) {
+        Author author = authorRepository.findById(book.getAuthor().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Автор не найден"));
+        book.setAuthor(author);
         bookRepository.save(book);
     }
 
@@ -45,7 +49,7 @@ public class BookService {
     @Transactional
     public void deleteBook(long id) {
         if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Книга не найдена!");
+            throw new EntityNotFoundException("Книга не найдена!");
         }
         bookRepository.deleteById(id);
     }
@@ -55,10 +59,8 @@ public class BookService {
     }
 
     public Optional<Book> getBookById(long id) {
-        if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Книга не найдена!");
-        }
-        return bookRepository.findById(id);
+            return Optional.ofNullable(bookRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Книга не найдена!")));
     }
 
     public Page<Book> getByGenre(String genre, Pageable pageable) {
@@ -112,7 +114,8 @@ public class BookService {
         book.setPagesNumber(dto.getPagesNumber());
         book.setPublishingDate(dto.getPublishingDate());
         book.setDescription(dto.getDescription());
-        book.setAuthor(authorRepository.findById(dto.getAuthorId()).get());
+        book.setAuthor(authorRepository.findById(dto.getAuthorId())
+                .orElseThrow(() -> new EntityNotFoundException("Автор не найден")));
         return book;
     }
 }

@@ -4,6 +4,7 @@ import com.example.dto.BookRequest;
 import com.example.model.Book;
 import com.example.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createBook(@RequestBody BookRequest bookRequest) {
+    public ResponseEntity<String> createBook(@Valid @RequestBody BookRequest bookRequest) {
         try {
             Book book = bookService.convertToBook(bookRequest);
             bookService.createBook(book);
@@ -37,7 +38,7 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateBook(@PathVariable long id, @RequestBody BookRequest bookRequest) {
+    public ResponseEntity<String> updateBook(@Valid @PathVariable long id, @RequestBody BookRequest bookRequest) {
         try {
             Book book = bookService.convertToBook(bookRequest);
             bookService.update(id, book);

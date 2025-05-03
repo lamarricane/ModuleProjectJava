@@ -1,14 +1,16 @@
 package com.example.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
-@AllArgsConstructor
+@Setter
+@Getter
 @NoArgsConstructor
-public class LoginRequest {
+@AllArgsConstructor
+public class AuthRequest {
+    @NotBlank
     private String username;
+    @NotBlank
     private String password;
 }

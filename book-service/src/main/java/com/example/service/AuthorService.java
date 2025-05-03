@@ -41,7 +41,7 @@ public class AuthorService {
     @Transactional
     public void deleteAuthor(long id) {
         if (!authorRepository.existsById(id)) {
-            throw new EntityNotFoundException("Автор не найден");
+            throw new EntityNotFoundException("Автор не найден!");
         }
         authorRepository.deleteById(id);
     }
@@ -51,7 +51,8 @@ public class AuthorService {
     }
 
     public Optional<Author> getAuthorById(long id) {
-        return authorRepository.findById(id);
+        return Optional.ofNullable(authorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Автор не найден!")));
     }
 
     public Page<Author> getByLocation(String location, Pageable pageable) {

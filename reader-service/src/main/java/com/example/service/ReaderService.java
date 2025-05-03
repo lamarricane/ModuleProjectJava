@@ -1,22 +1,18 @@
 package com.example.service;
 
-import com.example.dto.BookResponse;
-import com.example.dto.ReaderRequest;
-import com.example.dto.ReaderResponse;
 import com.example.model.Book;
 import com.example.model.Reader;
 import com.example.repository.BookRepository;
 import com.example.repository.ReaderRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 public class ReaderService {
+
     private final ReaderRepository readerRepository;
     private final BookRepository bookRepository;
 
@@ -26,32 +22,29 @@ public class ReaderService {
     }
 
     @Transactional
-    public void createReader(ReaderRequest readerRequest) {
+    public Reader addBookToRead(UUID userId, Long bookId) {
+        if (readerRepository.existsByUserIdAndBookId(userId, bookId)) {
+            throw new IllegalArgumentException("Книга уже добавлена в прочитанное!");
+        }
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new IllegalArgumentException("Книга не найдена!"));
+
         Reader reader = new Reader();
+        reader.setUserId(userId);
+        reader.setBook(book);
 
-        var bookOptional = bookRepository.findById(readerRequest.getBookRequest().getId());
-        if (bookOptional.isPresent()) {
-            reader.setBook(bookOptional.get());
-            reader.setUser(readerRequest.getUser());
-            readerRepository.save(reader);
-        } else throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
-
+        return readerRepository.save(reader);
     }
 
-    public List<ReaderResponse> getAllReaders() {
-        return readerRepository.findAll().stream().map(this::mapToBookResponse).toList();
+    public List<Reader> getReadBooks(UUID userId) {
+        return readerRepository.findByUserId(userId);
     }
 
-    public ReaderResponse mapToBookResponse(Reader reader){
-        Book book = reader.getBook();
-        return ReaderResponse.builder()
-                .id(reader.getId())
-                .bookResponse(new BookResponse(reader.getBook()))
-                .user(reader.getUser()).build();
-    }
-
-    public List<ReaderResponse> getAllReadersByUser(int id){
-        List<Reader> readers = readerRepository.findByUser(id);
-        return readers.stream().map(this::mapToBookResponse).collect(Collectors.toList());
+    @Transactional
+    public void removeBookFromRead(UUID userId, Long bookId) {
+        Reader reader = readerRepository.findByUserIdAndBookId(userId, bookId)
+                .orElseThrow(() -> new IllegalArgumentException("Книга отсутствует в каталоге!"));
+        readerRepository.delete(reader);
     }
 }

@@ -5,17 +5,24 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="create-table-user" author="lamarricane">
-        <createTable tableName="users">
-            <column name="id" type="uuid">
+
+    <changeSet id="create-table-reader" author="lamarricane">
+        <createTable tableName="readers">
+            <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="username" type="varchar(255)">
-                <constraints nullable="false" unique="true"/>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
             </column>
-            <column name="password" type="varchar(255)">
+            <column name="book_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <addUniqueConstraint
+                tableName="readers"
+                columnNames="user_id, book_id"
+                constraintName="uk_user_book"/>
     </changeSet>
+
 </databaseChangeLog>

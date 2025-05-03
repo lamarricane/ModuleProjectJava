@@ -15,7 +15,8 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "books")
+@Table(name = "books", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"title", "author_id"}, name = "uk_book_title_author")})
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,10 +32,12 @@ public class Book {
     @Column(name = "genre", nullable = false)
     private String genre;
 
+    @NotBlank
     @Positive
     @Column(name = "pages_number", nullable = false)
     private int pagesNumber;
 
+    @NotBlank
     @PastOrPresent
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "publishing_date", nullable = false, columnDefinition = "DATE")
