@@ -1,13 +1,12 @@
 package com.example.config;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
@@ -32,8 +31,8 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    public SecretKey key() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
     public String getUsernameFromToken(String token) {

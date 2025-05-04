@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.*;
 
@@ -28,7 +29,7 @@ public class Author {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @NotBlank
+    @NotNull
     @Past
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "birth_date", nullable = false, columnDefinition = "DATE")

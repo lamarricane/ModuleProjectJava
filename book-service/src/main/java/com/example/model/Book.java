@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
@@ -32,12 +33,12 @@ public class Book {
     @Column(name = "genre", nullable = false)
     private String genre;
 
-    @NotBlank
+    @NotNull
     @Positive
     @Column(name = "pages_number", nullable = false)
     private int pagesNumber;
 
-    @NotBlank
+    @NotNull
     @PastOrPresent
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "publishing_date", nullable = false, columnDefinition = "DATE")

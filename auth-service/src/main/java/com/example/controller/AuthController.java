@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -25,23 +28,44 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        authRequest.getUsername(),
-                        authRequest.getPassword()));
+    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            authRequest.getUsername(),
+                            authRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtTokenProvider.generateToken(authentication);
-        return ResponseEntity.ok(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtTokenProvider.generateToken(authentication);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+            response.put("message", "Аутентификация успешна");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Ошибка аутентификации: " + e.getMessage());
+        }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody AuthRequest authRequest) {
-        User user = new User();
-        user.setUsername(authRequest.getUsername());
-        user.setPassword(authRequest.getPassword());
-        User registeredUser = userService.registerUser(user);
-        return ResponseEntity.ok(registeredUser);
+    public ResponseEntity<?> register(@RequestBody AuthRequest authRequest) {
+        try {
+            User user = new User();
+            user.setUsername(authRequest.getUsername());
+            user.setPassword(authRequest.getPassword());
+
+            User registeredUser = userService.registerUser(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Регистрация успешна");
+            response.put("userId", registeredUser.getId());
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Ошибка при регистрации");
+        }
     }
 }
