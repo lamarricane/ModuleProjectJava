@@ -1,50 +1,43 @@
 package com.example.service;
 
-import com.example.model.Book;
+import com.example.dto.ReaderRequest;
 import com.example.model.Reader;
-import com.example.repository.BookRepository;
 import com.example.repository.ReaderRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
-
 @Service
 public class ReaderService {
-
     private final ReaderRepository readerRepository;
-    private final BookRepository bookRepository;
 
-    public ReaderService(ReaderRepository readerRepository, BookRepository bookRepository){
-        this.bookRepository = bookRepository;
+    public ReaderService(ReaderRepository readerRepository) {
         this.readerRepository = readerRepository;
     }
 
     @Transactional
-    public Reader addBookToRead(UUID userId, Long bookId) {
-        if (readerRepository.existsByUserIdAndBookId(userId, bookId)) {
-            throw new IllegalArgumentException("Книга уже добавлена в прочитанное!");
+    public void addBookToReader(ReaderRequest request) {
+        if (readerRepository.existsByUsernameAndBookId(request.getUsername(), request.getBookId())) {
+            throw new IllegalArgumentException("Книга уже добавлена в список прочитанного!");
         }
 
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new IllegalArgumentException("Книга не найдена!"));
-
         Reader reader = new Reader();
-        reader.setUserId(userId);
-        reader.setBook(book);
-
-        return readerRepository.save(reader);
-    }
-
-    public List<Reader> getReadBooks(UUID userId) {
-        return readerRepository.findByUserId(userId);
+        reader.setUsername(request.getUsername());
+        reader.setBookId(request.getBookId());
+        readerRepository.save(reader);
     }
 
     @Transactional
-    public void removeBookFromRead(UUID userId, Long bookId) {
-        Reader reader = readerRepository.findByUserIdAndBookId(userId, bookId)
-                .orElseThrow(() -> new IllegalArgumentException("Книга отсутствует в каталоге!"));
-        readerRepository.delete(reader);
+    public void removeBookFromReader(String username, Long bookId) {
+        if (!readerRepository.existsByUsernameAndBookId(username, bookId)) {
+            throw new EntityNotFoundException("Книга не найдена в списке прочитанного!");
+        }
+        readerRepository.deleteByUsernameAndBookId(username, bookId);
+    }
+
+    public Page<Reader> getReaderBooks(String username, Pageable pageable) {
+        return readerRepository.findByUsername(username, pageable);
     }
 }

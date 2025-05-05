@@ -1,28 +1,33 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd">
 
     <changeSet id="create-table-reader" author="lamarricane">
-        <createTable tableName="readers">
+        <createTable tableName="readers" remarks="Таблица прочитанных книг пользователей">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="user_id" type="UUID">
+            <column name="username" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="book_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
         <addUniqueConstraint
                 tableName="readers"
-                columnNames="user_id, book_id"
-                constraintName="uk_user_book"/>
+                columnNames="username, book_id"
+                constraintName="uk_user_book"
+                deferrable="false"
+                disabled="false"
+                initiallyDeferred="false"/>
     </changeSet>
 
 </databaseChangeLog>

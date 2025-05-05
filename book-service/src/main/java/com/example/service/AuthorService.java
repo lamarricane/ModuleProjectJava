@@ -59,6 +59,10 @@ public class AuthorService {
         return authorRepository.findByLocation(location, pageable);
     }
 
+    public Page<Author> getByBookGenre(String genre, Pageable pageable){
+        return authorRepository.findByBookGenre(genre, pageable);
+    }
+
     public Page<Author> getByBirthDateBetween(LocalDate start, LocalDate end, Pageable pageable) {
         return authorRepository.findByBirthDateBetween(start, end, pageable);
     }

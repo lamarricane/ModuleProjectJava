@@ -7,9 +7,7 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class  PaginationConfig implements WebMvcConfigurer {
-
-    // Настройка дефолтных значений для Pageable
+public class PaginationConfig implements WebMvcConfigurer {
     @Bean
     public PageableHandlerMethodArgumentResolverCustomizer pageableResolverCustomizer() {
         return pageableResolver -> {

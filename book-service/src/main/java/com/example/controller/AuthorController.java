@@ -19,7 +19,7 @@ import java.util.Optional;
 public class AuthorController {
     private final AuthorService authorService;
 
-    public AuthorController(AuthorService authorService){
+    public AuthorController(AuthorService authorService) {
         this.authorService = authorService;
     }
 
@@ -72,6 +72,11 @@ public class AuthorController {
     @GetMapping("/location/{location}")
     public Page<Author> getAuthorsByLocation(@PathVariable String location, Pageable pageable) {
         return authorService.getByLocation(location, pageable);
+    }
+
+    @GetMapping("/genre/{genre}")
+    public Page<Author> getAuthorsByBookGenre(@PathVariable String genre, Pageable pageable) {
+        return authorService.getByBookGenre(genre, pageable);
     }
 
     @GetMapping("/birthdate")

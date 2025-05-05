@@ -3,7 +3,7 @@ package com.example.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
 @Setter
@@ -11,7 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "readers", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "book_id"}, name = "uk_user_book")})
+        @UniqueConstraint(columnNames = {"username", "book_id"}, name = "uk_user_book")})
 public class Reader {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,12 +19,14 @@ public class Reader {
     @Column(name = "id", nullable = false)
     private long id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @Column(name = "username", nullable = false)
+    private String username;
 
-    @ManyToOne
-    @JoinColumn(name = "book_id", nullable = false)
-    private Book book;
+    @Column(name = "book_id", nullable = false)
+    private long bookId;
+
+    @Column(name = "added_at", nullable = false)
+    private LocalDateTime addedAt = LocalDateTime.now();
 }
 
 

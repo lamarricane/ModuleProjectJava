@@ -1,52 +1,50 @@
 package com.example.controller;
 
-
+import com.example.dto.ReaderRequest;
 import com.example.model.Reader;
 import com.example.service.ReaderService;
-import com.example.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/readers")
 public class ReaderController {
-
     private final ReaderService readerService;
-    private final UserService userService;
 
-    public ReaderController(ReaderService readerService, UserService userService){
+    public ReaderController(ReaderService readerService) {
         this.readerService = readerService;
-        this.userService = userService;
     }
 
-    @PostMapping("/books/{bookId}")
-    public ResponseEntity<Reader> addBookToRead(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long bookId) {
-        UUID userId = userService.findByUsername(userDetails.getUsername()).getId();
-        Reader reader = readerService.addBookToRead(userId, bookId);
-        return ResponseEntity.ok(reader);
+    @PostMapping
+    public ResponseEntity<String> addBook(@RequestBody ReaderRequest request) {
+        try {
+            readerService.addBookToReader(request);
+            return ResponseEntity.ok("Книга успешно добавлена в список прочитанного!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Reader>> getReadBooks(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        UUID userId = userService.findByUsername(userDetails.getUsername()).getId();
-        List<Reader> readers = readerService.getReadBooks(userId);
-        return ResponseEntity.ok(readers);
+    @DeleteMapping
+    public ResponseEntity<String> removeBook(
+            @RequestParam String username,
+            @RequestParam Long bookId) {
+        try {
+            readerService.removeBookFromReader(username, bookId);
+            return ResponseEntity.ok("Книга успешно удалена из списка прочитанного!");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
-    @DeleteMapping("/books/{bookId}")
-    public ResponseEntity<Void> removeBookFromRead(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long bookId) {
-        UUID userId = userService.findByUsername(userDetails.getUsername()).getId();
-        readerService.removeBookFromRead(userId, bookId);
-        return ResponseEntity.noContent().build();
+    @GetMapping("/{username}")
+    public Page<Reader> getBooks(
+            @PathVariable String username,
+            Pageable pageable) {
+        return readerService.getReaderBooks(username, pageable);
     }
 }

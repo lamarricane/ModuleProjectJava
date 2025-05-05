@@ -1,71 +1,47 @@
 package com.example.controller;
 
-import com.example.config.JwtTokenProvider;
 import com.example.dto.AuthRequest;
-import com.example.model.User;
-import com.example.service.UserService;
-import lombok.RequiredArgsConstructor;
+import com.example.dto.AuthResponse;
+import com.example.exception.InvalidPasswordException;
+import com.example.exception.UserNotFoundException;
+import com.example.exception.UsernameAlreadyExistsException;
+import com.example.service.AuthService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserService userService;
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> signIn(@RequestBody AuthRequest request) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequest.getUsername(),
-                            authRequest.getPassword()));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            String token = jwtTokenProvider.generateToken(authentication);
-
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-            response.put("message", "Аутентификация успешна");
-
+            AuthResponse response = authService.login(request);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Ошибка аутентификации: " + e.getMessage());
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (InvalidPasswordException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> signUp(@RequestBody AuthRequest request) {
         try {
-            User user = new User();
-            user.setUsername(authRequest.getUsername());
-            user.setPassword(authRequest.getPassword());
-
-            User registeredUser = userService.registerUser(user);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Регистрация успешна");
-            response.put("userId", registeredUser.getId());
-
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Ошибка при регистрации");
+            authService.register(request);
+            return ResponseEntity.ok("Регистрация успешна!");
+        } catch (UsernameAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 }
