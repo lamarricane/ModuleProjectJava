@@ -35,12 +35,18 @@ public class JwtAuthenticationFilter implements WebFilter {
                     }
                     return tokenProvider.getAuthentication(token)
                             .flatMap(auth -> {
-                                System.out.println("Authentication successful for user: " + auth.getName());
-                                exchange.getRequest().mutate()
+                                // Логируем перед добавлением заголовка
+                                System.out.println("[Gateway] Adding X-Authenticated-User: " + auth.getName());
+
+                                // Добавляем заголовок
+                                ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                                         .header("X-Authenticated-User", auth.getName())
                                         .build();
 
-                                return chain.filter(exchange)
+                                // Логируем после добавления
+                                System.out.println("[Gateway] Headers in mutated request: " + mutatedRequest.getHeaders());
+
+                                return chain.filter(exchange.mutate().request(mutatedRequest).build())
                                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
                             });
                 });

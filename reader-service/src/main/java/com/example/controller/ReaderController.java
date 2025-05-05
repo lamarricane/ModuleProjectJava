@@ -26,9 +26,15 @@ public class ReaderController {
     @PostMapping("/{bookId}")
     public ResponseEntity<?> addBookToReadList(
             @PathVariable Long bookId,
-            @RequestHeader("X-Authenticated-User") String username) {
-        log.info("Received X-Authenticated-User header: {}", username);
-        log.info("Trying to add bookId: {} for user: {}", bookId, username);
+            @RequestHeader(value = "X-Authenticated-User") String username) {
+
+        if (username == null) {
+            log.error("X-Authenticated-User header is missing");
+            return ResponseEntity.badRequest().body("Authentication required");
+        }
+
+        log.info("Processing request for user: {}", username);
+
         try {
             Reader reader = readerService.addBookToReadList(username, bookId);
             return ResponseEntity.ok(reader);
