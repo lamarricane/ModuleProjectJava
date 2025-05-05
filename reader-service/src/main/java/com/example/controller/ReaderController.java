@@ -1,50 +1,65 @@
 package com.example.controller;
 
-import com.example.dto.ReaderRequest;
+import com.example.exception.BookAlreadyInReadListException;
+import com.example.exception.BookNotInReadListException;
 import com.example.model.Reader;
 import com.example.service.ReaderService;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/readers")
 public class ReaderController {
+
     private final ReaderService readerService;
 
     public ReaderController(ReaderService readerService) {
         this.readerService = readerService;
     }
 
-    @PostMapping
-    public ResponseEntity<String> addBook(@RequestBody ReaderRequest request) {
+    @PostMapping("/{bookId}")
+    public ResponseEntity<?> addBookToReadList(
+            @PathVariable Long bookId,
+            @RequestHeader("X-Authenticated-User") String username) {
+        log.info("Received X-Authenticated-User header: {}", username);
+        log.info("Trying to add bookId: {} for user: {}", bookId, username);
         try {
-            readerService.addBookToReader(request);
-            return ResponseEntity.ok("Книга успешно добавлена в список прочитанного!");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Reader reader = readerService.addBookToReadList(username, bookId);
+            return ResponseEntity.ok(reader);
+        } catch (BookAlreadyInReadListException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (BookNotInReadListException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    @DeleteMapping
-    public ResponseEntity<String> removeBook(
-            @RequestParam String username,
-            @RequestParam Long bookId) {
-        try {
-            readerService.removeBookFromReader(username, bookId);
-            return ResponseEntity.ok("Книга успешно удалена из списка прочитанного!");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    @DeleteMapping("/{bookId}")
+    public ResponseEntity<Void> removeBookFromReadList(
+            @PathVariable Long bookId,
+            @RequestHeader("X-Authenticated-User") String username) {
+        readerService.removeBookFromReadList(username, bookId);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{username}")
-    public Page<Reader> getBooks(
-            @PathVariable String username,
-            Pageable pageable) {
-        return readerService.getReaderBooks(username, pageable);
+    @GetMapping("/{bookId}")
+    public ResponseEntity<Reader> getBookFromReadList(
+            @PathVariable Long bookId,
+            @RequestHeader("X-Authenticated-User") String username) {
+        Reader reader = readerService.getBookFromReadList(username, bookId);
+        return ResponseEntity.ok(reader);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<Reader>> getAllReadBooks(
+            Pageable pageable,
+            @RequestHeader("X-Authenticated-User") String username) {
+        Page<Reader> readers = readerService.getAllReadBooks(username, pageable);
+        return ResponseEntity.ok(readers);
     }
 }

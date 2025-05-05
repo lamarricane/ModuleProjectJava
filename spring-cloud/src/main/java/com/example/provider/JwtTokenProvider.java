@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
@@ -19,18 +18,6 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(@Value("${app.jwt-secret}") String secret) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public String generateToken(Authentication authentication) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + 86400000); // 24 часа
-
-        return Jwts.builder()
-                .setSubject(authentication.getName())
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(secretKey, SignatureAlgorithm.HS512)
-                .compact();
     }
 
     public Mono<Authentication> getAuthentication(String token) {
@@ -42,26 +29,23 @@ public class JwtTokenProvider {
                     .getBody();
 
             String username = claims.getSubject();
-            System.out.println(username);
+            System.out.println("Имя пользователя из токена " + username);
             return Mono.just(new UsernamePasswordAuthenticationToken(
                     username, null, Collections.emptyList()));
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (JwtException e) {
             return Mono.empty();
         }
     }
 
-    public boolean validateToken(String token) {
+    public Mono<Boolean> validateToken(String token) {
         try {
-            Jws<Claims> claims = Jwts.parserBuilder()
+            Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token);
-            boolean isValid = !claims.getBody().getExpiration().before(new Date());
-            System.out.println("Токен валиден: " + isValid);
-            return isValid;
+            return Mono.just(true);
         } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("Ошибка валидации токена: " + e.getMessage());
-            return false;
+            return Mono.just(false);
         }
     }
 }

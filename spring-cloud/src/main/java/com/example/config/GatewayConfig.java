@@ -15,8 +15,8 @@ public class GatewayConfig {
                         .uri("lb://auth-service"))
                 .route("book-service", r -> r.path("/api/catalog/**")
                         .uri("lb://book-service"))
-                .route("readers-service", r -> r.path("/api/readers/**")
-                        .uri("lb://readers-service"))
+                .route("reader-service", r -> r.path("/api/readers/**")
+                        .uri("lb://reader-service"))
                 .build();
     }
 }
