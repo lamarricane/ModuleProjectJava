@@ -1,18 +1,16 @@
 package com.example.controller;
 
+import com.example.dto.BookResponse;
 import com.example.exception.BookAlreadyInReadListException;
 import com.example.exception.BookNotInReadListException;
 import com.example.model.Reader;
 import com.example.service.ReaderService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/readers")
 public class ReaderController {
@@ -29,12 +27,8 @@ public class ReaderController {
             @RequestHeader(value = "X-Authenticated-User") String username) {
 
         if (username == null) {
-            log.error("X-Authenticated-User header is missing");
             return ResponseEntity.badRequest().body("Authentication required");
         }
-
-        log.info("Processing request for user: {}", username);
-
         try {
             Reader reader = readerService.addBookToReadList(username, bookId);
             return ResponseEntity.ok(reader);
@@ -54,18 +48,18 @@ public class ReaderController {
     }
 
     @GetMapping("/{bookId}")
-    public ResponseEntity<Reader> getBookFromReadList(
+    public ResponseEntity<BookResponse> getBookFromReadList(
             @PathVariable Long bookId,
             @RequestHeader("X-Authenticated-User") String username) {
-        Reader reader = readerService.getBookFromReadList(username, bookId);
-        return ResponseEntity.ok(reader);
+        BookResponse bookResponse = readerService.getBookFromReadList(username, bookId);
+        return ResponseEntity.ok(bookResponse);
     }
 
     @GetMapping
-    public ResponseEntity<Page<Reader>> getAllReadBooks(
+    public ResponseEntity<Page<BookResponse>> getAllReadBooks(
             Pageable pageable,
             @RequestHeader("X-Authenticated-User") String username) {
-        Page<Reader> readers = readerService.getAllReadBooks(username, pageable);
-        return ResponseEntity.ok(readers);
+        Page<BookResponse> books = readerService.getAllReadBooks(username, pageable);
+        return ResponseEntity.ok(books);
     }
 }

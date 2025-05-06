@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.dto.BookDetailsResponse;
 import com.example.dto.BookRequest;
 import com.example.model.Book;
 import com.example.service.BookService;
@@ -130,5 +131,24 @@ public class BookController {
         return "desc".equalsIgnoreCase(direction) ?
                 bookService.getOrderByPublishingDateDesc(pageable) :
                 bookService.getOrderByPublishingDateAsc(pageable);
+    }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<BookDetailsResponse> getBookDetails(@PathVariable long id) {
+        Book book = bookService.getBookById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + id));
+
+        BookDetailsResponse response = new BookDetailsResponse();
+        response.setTitle(book.getTitle());
+        response.setGenre(book.getGenre());
+        response.setPagesNumber(book.getPagesNumber());
+        response.setPublishingDate(book.getPublishingDate());
+        response.setDescription(book.getDescription());
+
+        BookDetailsResponse.AuthorInfo authorInfo = new BookDetailsResponse.AuthorInfo();
+        authorInfo.setName(book.getAuthor().getName());
+        response.setAuthor(authorInfo);
+
+        return ResponseEntity.ok(response);
     }
 }

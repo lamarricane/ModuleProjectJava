@@ -53,7 +53,6 @@ public class AuthService {
         }
     }
 
-
     public void register(AuthRequest request) {
         // Проверка, свободно ли имя пользователя
         if (userRepository.existsByUsername(request.getUsername())) {
