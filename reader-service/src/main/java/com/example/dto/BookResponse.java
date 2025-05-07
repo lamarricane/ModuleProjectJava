@@ -6,6 +6,9 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * DTO для прочитанных книг
+ */
 @Data
 public class BookResponse {
     private String title;

@@ -3,6 +3,9 @@ package com.example.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+/**
+ * DTO для пользователя
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

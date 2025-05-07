@@ -17,9 +17,9 @@
 
     <modules>
         <module>auth-service</module>
-        <module>book-service</module>
+        <module>catalog-service</module>
         <module>eureka-server</module>
-        <module>spring-cloud</module>
+        <module>api-gateway</module>
         <module>reader-service</module>
     </modules>
 
