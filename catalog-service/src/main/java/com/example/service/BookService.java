@@ -9,6 +9,7 @@ import com.example.repository.BookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Сервис для работы с книгами:
@@ -35,7 +39,7 @@ public class  BookService {
     }
 
     @Transactional
-    public void createBook(Book book) {
+    public void create(Book book) {
         Instant start = Instant.now();
         logger.info("Creating new book: {}", book.getTitle());
         Author author = authorRepository.findById(book.getAuthor().getId())
@@ -44,6 +48,8 @@ public class  BookService {
         try {
             bookRepository.save(book);
             logger.info("Book created successfully with ID: {}", book.getId());
+            //bookRepository.clearStatsCache();
+            //logger.info("All cache has been cleared");
 
             Duration duration = Duration.between(start, Instant.now());
             logger.debug("Book creation completed in {} ms", duration.toMillis());
@@ -72,6 +78,8 @@ public class  BookService {
         book.setDescription(updatedBook.getDescription());
 
         bookRepository.save(book);
+        //bookRepository.clearStatsCache();
+        //logger.info("All cache has been cleared");
 
         logger.info("Book with ID: {} updated successfully", id);
         Duration duration = Duration.between(start, Instant.now());
@@ -79,7 +87,7 @@ public class  BookService {
     }
 
     @Transactional
-    public void deleteBook(long id) {
+    public void delete(long id) {
         Instant start = Instant.now();
         logger.info("Deleting book with ID: {}", id);
 
@@ -87,13 +95,15 @@ public class  BookService {
             throw new EntityNotFoundException("Книга не найдена!");
         }
         bookRepository.deleteById(id);
+        //bookRepository.clearStatsCache();
+        //logger.info("All cache has been cleared");
 
         logger.info("Author with ID: {} deleted successfully", id);
         Duration duration = Duration.between(start, Instant.now());
         logger.debug("Author deletion completed in {} ms", duration.toMillis());
     }
 
-    public Page<Book> getAllBooks(Pageable pageable) {
+    public Page<Book> getAll(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all books with pagination: {}", pageable);
 
@@ -105,7 +115,7 @@ public class  BookService {
         return books;
     }
 
-    public Book getBookById(long id) {
+    public Book getById(long id) {
         Instant start = Instant.now();
         logger.debug("Fetching book by ID: {}", id);
 
@@ -251,6 +261,54 @@ public class  BookService {
         logger.debug("Fetched {} books by publishing date in {} ms", books.getTotalElements(), duration.toMillis());
 
         return books;
+    }
+
+    // Жанровая статистика
+    public List<Map<String, Object>> getGenreStats() {
+        Instant start = Instant.now();
+        logger.debug("Fetching book stats...");
+
+        List<Map<String, Object>> books = bookRepository.getGenreStats();
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched book stats in {} ms", duration.toMillis());
+
+        return books;
+    }
+
+    // Полная статистика по авторам
+    public List<Map<String, Object>> getFullAuthorStats() {
+        Instant start = Instant.now();
+        logger.debug("Fetching author stats...");
+
+        List<Map<String, Object>> books = bookRepository.getAuthorStats();
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched author stats in {} ms", duration.toMillis());
+
+        return books;
+    }
+
+    // Краткая статистика (топ-10)
+    public List<Map<String, Object>> getAuthorStatsSummary() {
+        Instant start = Instant.now();
+        logger.debug("Fetching author stats summary...");
+
+        List<Map<String, Object>> books = bookRepository.getAuthorStatsSummary();
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched author stats summary in {} ms", duration.toMillis());
+
+        return books;
+    }
+
+    // Комбинированный метод с многоуровневым кэшированием
+    @Cacheable(value = "authorStats", key = "'combined'")
+    public Map<String, Object> getCombinedAuthorStats() {
+        return Map.of(
+                "summary", bookRepository.getAuthorStatsSummary(),
+                "fullStatsLastUpdated", LocalDateTime.now()
+        );
     }
 
     public Book convertToBook(BookRequest dto) {

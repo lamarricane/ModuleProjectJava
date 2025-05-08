@@ -1,0 +1,12 @@
+<changeSet id="add_indexes_to_authors" author="lamarricane">
+    <createIndex tableName="authors" indexName="idx_author_name">
+        <column name="name"/>
+    </createIndex>
+    <createIndex tableName="authors" indexName="idx_author_location">
+        <column name="location"/>
+    </createIndex>
+    <createIndex tableName="authors" indexName="idx_author_birth_date">
+        <column name="birth_date"/>
+    </createIndex>
+</changeSet>
+

@@ -1,0 +1,18 @@
+<changeSet id="add_indexes_to_books" author="lamarricane">
+    <createIndex tableName="books" indexName="idx_book_title">
+        <column name="title"/>
+    </createIndex>
+    <createIndex tableName="books" indexName="idx_book_genre">
+        <column name="genre"/>
+    </createIndex>
+    <createIndex tableName="books" indexName="idx_book_pages">
+        <column name="pages_number"/>
+    </createIndex>
+    <createIndex tableName="books" indexName="idx_book_pub_date">
+        <column name="publishing_date"/>
+    </createIndex>
+    <createIndex tableName="books" indexName="idx_book_author_genre">
+        <column name="author_id"/>
+        <column name="genre"/>
+    </createIndex>
+</changeSet>

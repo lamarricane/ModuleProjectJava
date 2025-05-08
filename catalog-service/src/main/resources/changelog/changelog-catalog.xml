@@ -8,4 +8,6 @@
     <include file="insert-changeset-author-table.xml" relativeToChangelogFile="true"/>
     <include file="create-changeset-book-table.xml" relativeToChangelogFile="true"/>
     <include file="insert-changeset-book-table.xml" relativeToChangelogFile="true"/>
+    <!--include file="create-index-author.xml" relativeToChangelogFile="true">
+    <include file="create-index-book.xml" relativeToChangelogFile="true"-->
 </databaseChangeLog>

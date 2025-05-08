@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * Настройка для дефолтных значений пагинации
  */
 @Configuration
-public class  PaginationConfig implements WebMvcConfigurer {
+public class PaginationConfig implements WebMvcConfigurer {
 
     @Bean
     public PageableHandlerMethodArgumentResolverCustomizer pageableResolverCustomizer() {

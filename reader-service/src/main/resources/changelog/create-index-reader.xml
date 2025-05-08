@@ -1,0 +1,12 @@
+<changeSet id="add_indexes_to_readers" author="lamarricane">
+    <createIndex tableName="readers" indexName="idx_reader_username">
+        <column name="username"/>
+    </createIndex>
+    <createIndex tableName="readers" indexName="idx_reader_book_id">
+        <column name="book_id"/>
+    </createIndex>
+    <createIndex tableName="readers" indexName="idx_reader_username_book_id">
+        <column name="username"/>
+        <column name="book_id"/>
+    </createIndex>
+</changeSet>

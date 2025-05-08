@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Контроллер для эндпоинтов при работе с каталогом книг
@@ -33,7 +35,7 @@ public class BookController {
     public ResponseEntity<String> createBook(@Valid @RequestBody BookRequest bookRequest) {
         try {
             Book book = bookService.convertToBook(bookRequest);
-            bookService.createBook(book);
+            bookService.create(book);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Книга с ID: " + book.getId() + " успешно создана!");
         } catch (EntityNotFoundException e) {
@@ -66,7 +68,7 @@ public class BookController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBook(@PathVariable long id) {
         try {
-            bookService.deleteBook(id);
+            bookService.delete(id);
             return ResponseEntity.ok("Книга с ID: " + id + " успешно удалена!");
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -80,12 +82,12 @@ public class BookController {
 
     @GetMapping
     public Page<Book> getAllBooks(Pageable pageable) {
-        return bookService.getAllBooks(pageable);
+        return bookService.getAll(pageable);
     }
 
     @GetMapping("/{id}")
     public Book getBookById(@PathVariable long id) {
-        return bookService.getBookById(id);
+        return bookService.getById(id);
     }
 
     @GetMapping("/genre/{genre}")
@@ -163,5 +165,25 @@ public class BookController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Произошла ошибка при получении информации о книге!");
         }
+    }
+
+    @GetMapping("/complex/author-stats")
+    public ResponseEntity<List<Map<String, Object>>> getFullAuthorStats() {
+        return ResponseEntity.ok(bookService.getFullAuthorStats());
+    }
+
+    @GetMapping("/complex/genre-stats")
+    public ResponseEntity<List<Map<String, Object>>> getGenreStats() {
+        return ResponseEntity.ok(bookService.getGenreStats());
+    }
+
+    @GetMapping("/complex/author-stats-summary")
+    public ResponseEntity<List<Map<String, Object>>> getAuthorStatsSummary() {
+        return ResponseEntity.ok(bookService.getAuthorStatsSummary());
+    }
+
+    @GetMapping("/complex/author-stats-combined")
+    public ResponseEntity<Map<String, Object>> getCombinedAuthorStats() {
+        return ResponseEntity.ok(bookService.getCombinedAuthorStats());
     }
 }

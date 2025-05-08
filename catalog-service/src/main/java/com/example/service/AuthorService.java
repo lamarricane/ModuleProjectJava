@@ -30,7 +30,7 @@ public class AuthorService {
     }
 
     @Transactional
-    public void createAuthor(Author author) {
+    public void create(Author author) {
         Instant start = Instant.now();
         logger.info("Creating new author: {}", author.getName());
 
@@ -71,7 +71,7 @@ public class AuthorService {
     }
 
     @Transactional
-    public void deleteAuthor(long id) {
+    public void delete(long id) {
         Instant start = Instant.now();
         logger.info("Deleting author with ID: {}", id);
 
@@ -85,7 +85,7 @@ public class AuthorService {
         logger.debug("Author deletion completed in {} ms", duration.toMillis());
     }
 
-    public Page<Author> getAllAuthors(Pageable pageable) {
+    public Page<Author> getAll(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors with pagination: {}", pageable);
 
@@ -97,7 +97,7 @@ public class AuthorService {
         return authors;
     }
 
-    public Author getAuthorById(long id) {
+    public Author getById(long id) {
         Instant start = Instant.now();
         logger.debug("Fetching author by ID: {}", id);
 
@@ -149,7 +149,7 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+    public Page<Author> getByNameContainingIgnoreCase(String name, Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching authors by name with pagination: {}", pageable);
 
@@ -161,7 +161,7 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findAllByOrderByNameAsc(Pageable pageable) {
+    public Page<Author> getAllByOrderByNameAsc(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors by name with pagination: {}", pageable);
 
@@ -173,7 +173,7 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findAllByOrderByNameDesc(Pageable pageable) {
+    public Page<Author> getAllByOrderByNameDesc(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors by name with pagination: {}", pageable);
 
@@ -185,7 +185,7 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findAllByOrderByBirthDateAsc(Pageable pageable) {
+    public Page<Author> getAllByOrderByBirthDateAsc(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors by birth date with pagination: {}", pageable);
 
@@ -197,7 +197,7 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findAllByOrderByBirthDateDesc(Pageable pageable) {
+    public Page<Author> getAllByOrderByBirthDateDesc(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors by birth date with pagination: {}", pageable);
 
@@ -209,11 +209,11 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findAllOrderByBooksCountAsc(Pageable pageable) {
+    public Page<Author> getAllOrderByBooksCountAsc(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors by book genre with pagination: {}", pageable);
 
-        Page<Author> authors = authorRepository.findAllByOrderByBirthDateAsc(pageable);
+        Page<Author> authors = authorRepository.findAllOrderByBooksCountAsc(pageable);
 
         Duration duration = Duration.between(start, Instant.now());
         logger.debug("Fetched {} authors by book genre in {} ms", authors.getTotalElements(), duration.toMillis());
@@ -221,11 +221,11 @@ public class AuthorService {
         return authors;
     }
 
-    public Page<Author> findAllOrderByBooksCountDesc(Pageable pageable) {
+    public Page<Author> getAllOrderByBooksCountDesc(Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching all authors by books count with pagination: {}", pageable);
 
-        Page<Author> authors = authorRepository.findAllByOrderByBirthDateDesc(pageable);
+        Page<Author> authors = authorRepository.findAllOrderByBooksCountDesc(pageable);
 
         Duration duration = Duration.between(start, Instant.now());
         logger.debug("Fetched {} authors by books count in {} ms", authors.getTotalElements(), duration.toMillis());

@@ -32,7 +32,7 @@ public class AuthorController {
     public ResponseEntity<String> createAuthor(@Valid @RequestBody AuthorRequest authorRequest) {
         try {
             Author author = authorService.convertToAuthor(authorRequest);
-            authorService.createAuthor(author);
+            authorService.create(author);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Автор с ID: " + author.getId() + " успешно создан!");
         } catch (EntityNotFoundException e) {
@@ -64,7 +64,7 @@ public class AuthorController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAuthor(@PathVariable long id) {
         try {
-            authorService.deleteAuthor(id);
+            authorService.delete(id);
             return ResponseEntity.ok("Автор с ID: " + id + " успешно удален!");
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -78,12 +78,12 @@ public class AuthorController {
 
     @GetMapping
     public Page<Author> getAllAuthors(Pageable pageable) {
-        return authorService.getAllAuthors(pageable);
+        return authorService.getAll(pageable);
     }
 
     @GetMapping("/{id}")
     public Author getAuthorById(@PathVariable long id) {
-        return authorService.getAuthorById(id);
+        return authorService.getById(id);
     }
 
     @GetMapping("/location/{location}")
@@ -108,7 +108,7 @@ public class AuthorController {
     public Page<Author> searchAuthorsByName(
             @RequestParam String name,
             Pageable pageable) {
-        return authorService.findByNameContainingIgnoreCase(name, pageable);
+        return authorService.getByNameContainingIgnoreCase(name, pageable);
     }
 
     @GetMapping("/sort/name")
@@ -116,8 +116,8 @@ public class AuthorController {
             @RequestParam(defaultValue = "asc") String direction,
             Pageable pageable) {
         return "desc".equalsIgnoreCase(direction) ?
-                authorService.findAllByOrderByNameDesc(pageable) :
-                authorService.findAllByOrderByNameAsc(pageable);
+                authorService.getAllByOrderByNameDesc(pageable) :
+                authorService.getAllByOrderByNameAsc(pageable);
     }
 
     @GetMapping("/sort/birthdate")
@@ -125,8 +125,8 @@ public class AuthorController {
             @RequestParam(defaultValue = "asc") String direction,
             Pageable pageable) {
         return "desc".equalsIgnoreCase(direction) ?
-                authorService.findAllByOrderByBirthDateDesc(pageable) :
-                authorService.findAllByOrderByBirthDateAsc(pageable);
+                authorService.getAllByOrderByBirthDateDesc(pageable) :
+                authorService.getAllByOrderByBirthDateAsc(pageable);
     }
 
     @GetMapping("/sort/books")
@@ -134,7 +134,7 @@ public class AuthorController {
             @RequestParam(defaultValue = "asc") String direction,
             Pageable pageable) {
         return "desc".equalsIgnoreCase(direction) ?
-                authorService.findAllOrderByBooksCountDesc(pageable) :
-                authorService.findAllOrderByBooksCountAsc(pageable);
+                authorService.getAllOrderByBooksCountDesc(pageable) :
+                authorService.getAllOrderByBooksCountAsc(pageable);
     }
 }
