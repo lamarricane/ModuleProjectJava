@@ -1,8 +1,8 @@
-package com.example.service;
+package com.example.service.jdbc;
 
 import com.example.dto.AuthorRequest;
 import com.example.model.Author;
-import com.example.repository.AuthorRepository;
+import com.example.repository.jdbc.AuthorJdbcRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,17 +15,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/**
- * Сервис для работы с авторами:
- * - внутренняя логика CRUD операций;
- * - фильтрация, сортировка и поиск авторов.
- */
 @Service
-public class AuthorService {
-    private static final Logger logger = LoggerFactory.getLogger(AuthorService.class);
-    private final AuthorRepository authorRepository;
+public class AuthorJdbcService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthorJdbcService.class);
+    private final AuthorJdbcRepository authorRepository;
 
-    public AuthorService(AuthorRepository authorRepository) {
+    public AuthorJdbcService(AuthorJdbcRepository authorRepository) {
         this.authorRepository = authorRepository;
     }
 
@@ -89,7 +84,7 @@ public class AuthorService {
         Instant start = Instant.now();
         logger.debug("Fetching all authors with pagination: {}", pageable);
 
-        Page<Author> authors = authorRepository.findAll(pageable);
+        Page<Author> authors = authorRepository.findAllByOrderByNameAsc(pageable);
 
         Duration duration = Duration.between(start, Instant.now());
         logger.debug("Fetched {} all authors in {} ms", authors.getTotalElements(), duration.toMillis());

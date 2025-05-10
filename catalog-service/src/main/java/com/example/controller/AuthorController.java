@@ -2,7 +2,9 @@ package com.example.controller;
 
 import com.example.dto.AuthorRequest;
 import com.example.model.Author;
-import com.example.service.AuthorService;
+import com.example.service.jdbc.AuthorJdbcService;
+import com.example.service.jooq.AuthorJooqService;
+import com.example.service.jpa.AuthorJpaService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -22,9 +24,11 @@ import java.time.LocalDate;
 @RequestMapping("/api/catalog/authors")
 public class AuthorController {
     private static final Logger logger = LoggerFactory.getLogger(AuthorController.class);
-    private final AuthorService authorService;
+    //private final AuthorJpaService authorJpaService;
+    //private final AuthorJdbcService authorJdbcService;
+    private final AuthorJooqService authorService;
 
-    public AuthorController(AuthorService authorService) {
+    public AuthorController(AuthorJooqService authorService) {
         this.authorService = authorService;
     }
 
@@ -86,14 +90,11 @@ public class AuthorController {
         return authorService.getById(id);
     }
 
-    @GetMapping("/location/{location}")
-    public Page<Author> getAuthorsByLocation(@PathVariable String location, Pageable pageable) {
-        return authorService.getByLocation(location, pageable);
-    }
-
-    @GetMapping("/genre/{genre}")
-    public Page<Author> getAuthorsByBookGenre(@PathVariable String genre, Pageable pageable) {
-        return authorService.getByBookGenre(genre, pageable);
+    @GetMapping("/search")
+    public Page<Author> searchAuthorsByName(
+            @RequestParam String name,
+            Pageable pageable) {
+        return authorService.getByName(name, pageable);
     }
 
     @GetMapping("/birthdate")
@@ -104,11 +105,14 @@ public class AuthorController {
         return authorService.getByBirthDateBetween(start, end, pageable);
     }
 
-    @GetMapping("/search")
-    public Page<Author> searchAuthorsByName(
-            @RequestParam String name,
-            Pageable pageable) {
-        return authorService.getByNameContainingIgnoreCase(name, pageable);
+    @GetMapping("/location/{location}")
+    public Page<Author> getAuthorsByLocation(@PathVariable String location, Pageable pageable) {
+        return authorService.getByLocation(location, pageable);
+    }
+
+    @GetMapping("/genre/{genre}")
+    public Page<Author> getAuthorsByBookGenre(@PathVariable String genre, Pageable pageable) {
+        return authorService.getByBookGenre(genre, pageable);
     }
 
     @GetMapping("/sort/name")

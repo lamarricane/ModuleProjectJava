@@ -1,8 +1,7 @@
-package com.example.repository;
+package com.example.repository.jpa;
 
 import com.example.model.Book;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,15 +18,17 @@ import java.util.Map;
  * Наследует JpaRepository для базовых CRUD-операций.
  */
 @Repository
-public interface BookRepository extends JpaRepository<Book, Long> {
-    //Фильтрация
+public interface BookJpaRepository extends JpaRepository<Book, Long>{
+    // Фильтрация
     Page<Book> findByGenre(String genre, Pageable pageable);
     Page<Book> findByPublishingDateBetween(LocalDate lowBound, LocalDate highBound, Pageable pageable);
     Page<Book> findByPagesNumberBetween(int minPages, int maxPages, Pageable pageable);
-    //Поиск по частичному совпадению
+
+    // Поиск по частичному совпадению
     Page<Book> findByAuthorNameContainingIgnoreCase(String authorName, Pageable pageable);
     Page<Book> findByTitleContainingIgnoreCase(String title, Pageable pageable);
-    //Сортировка
+
+    // Сортировка
     Page<Book> findAllByOrderByTitleAsc(Pageable pageable);
     Page<Book> findAllByOrderByTitleDesc(Pageable pageable);
     Page<Book> findAllByOrderByPagesNumberAsc(Pageable pageable);
@@ -35,7 +36,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     Page<Book> findAllByOrderByPublishingDateAsc(Pageable pageable);
     Page<Book> findAllByOrderByPublishingDateDesc(Pageable pageable);
 
-    //@Cacheable(value = "authorStats", key = "'full'")
+    // Статистические методы
     @Query(value = """
         SELECT a.name as authorName, COUNT(b.id) as bookCount, 
                AVG(b.pages_number) as avgPages, 
@@ -47,7 +48,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
         """, nativeQuery = true)
     List<Map<String, Object>> getAuthorStats();
 
-    //@Cacheable(value = "authorStats", key = "'summary'")
     @Query(value = """
         SELECT a.name as authorName, COUNT(b.id) as bookCount
         FROM authors a
@@ -58,7 +58,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
         """, nativeQuery = true)
     List<Map<String, Object>> getAuthorStatsSummary();
 
-    //@Cacheable(value = "genreStats", key = "'full'")
     @Query(value = """
         SELECT genre, COUNT(id) as bookCount, 
                AVG(pages_number) as avgPages

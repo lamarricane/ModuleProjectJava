@@ -3,7 +3,10 @@ package com.example.controller;
 import com.example.dto.BookDetailsResponse;
 import com.example.dto.BookRequest;
 import com.example.model.Book;
-import com.example.service.BookService;
+import com.example.service.jdbc.BookJdbcService;
+//import com.example.service.jooq.BookJooqService;
+//import com.example.service.jpa.BookJpaService;
+import com.example.service.jooq.BookJooqService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -15,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -25,9 +29,9 @@ import java.util.Map;
 @RequestMapping("/api/catalog/books")
 public class BookController {
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
-    private final BookService bookService;
+    private final BookJooqService bookService;
 
-    public BookController(BookService bookService) {
+    public BookController(BookJooqService bookService) {
         this.bookService = bookService;
     }
 
@@ -156,6 +160,7 @@ public class BookController {
     public ResponseEntity<?> getBookDetails(@PathVariable long id) {
         try {
             BookDetailsResponse response = bookService.convertToBookDetails(getBookById(id));
+            response.setAddedAt(LocalDateTime.now());
             return ResponseEntity.ok(response);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

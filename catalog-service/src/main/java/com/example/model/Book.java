@@ -25,9 +25,8 @@ import java.time.LocalDate;
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.NONE)
     @Column(name = "id", nullable = false)
-    private long id;
+    private Long id;
 
     @NotBlank
     @Column(name = "title", nullable = false)

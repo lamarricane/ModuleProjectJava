@@ -24,9 +24,8 @@ import java.util.List;
 public class Author {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.NONE)
     @Column(name = "id", nullable = false)
-    private long id;
+    private Long id;
 
     @Getter
     @NotBlank

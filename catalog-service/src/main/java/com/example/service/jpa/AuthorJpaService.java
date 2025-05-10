@@ -1,0 +1,243 @@
+package com.example.service.jpa;
+
+import com.example.dto.AuthorRequest;
+import com.example.model.Author;
+import com.example.repository.jpa.AuthorJpaRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+
+/**
+ * Сервис JPA для работы с авторами:
+ * - внутренняя логика CRUD операций;
+ * - фильтрация, сортировка и поиск авторов.
+ */
+@Service
+public class AuthorJpaService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthorJpaService.class);
+    private final AuthorJpaRepository authorRepository;
+
+    public AuthorJpaService(AuthorJpaRepository authorRepository) {
+        this.authorRepository = authorRepository;
+    }
+
+    @Transactional
+    public void create(Author author) {
+        Instant start = Instant.now();
+        logger.info("Creating new author: {}", author.getName());
+
+        try {
+            authorRepository.save(author);
+            logger.info("Author created successfully with ID: {}", author.getId());
+
+            Duration duration = Duration.between(start, Instant.now());
+            logger.debug("Author creation completed in {} ms", duration.toMillis());
+
+        } catch (Exception e) {
+            logger.error("Error creating author: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    @Transactional
+    public void update(Long id, Author updatedAuthor) {
+        Instant start = Instant.now();
+        logger.info("Updating author with ID: {}", id);
+
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.warn("Author not found with ID: {}", id);
+                    return new EntityNotFoundException("Автор не найден!");
+                });
+        author.setName(updatedAuthor.getName());
+        author.setBirthDate(updatedAuthor.getBirthDate());
+        author.setLocation(updatedAuthor.getLocation());
+        author.setBio(updatedAuthor.getBio());
+
+        authorRepository.save(author);
+
+        logger.info("Author with ID: {} updated successfully", id);
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Author update completed in {} ms", duration.toMillis());
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Instant start = Instant.now();
+        logger.info("Deleting author with ID: {}", id);
+
+        if (!authorRepository.existsById(id)) {
+            throw new EntityNotFoundException("Автор не найден!");
+        }
+        authorRepository.deleteById(id);
+
+        logger.info("Author with ID: {} deleted successfully", id);
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Author deletion completed in {} ms", duration.toMillis());
+    }
+
+    public Page<Author> getAll(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAll(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} all authors in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Author getById(Long id) {
+        Instant start = Instant.now();
+        logger.debug("Fetching author by ID: {}", id);
+
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.warn("Author not found with ID: {}", id);
+                    return new EntityNotFoundException("Автор не найден!");
+                });
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Author fetched in {} ms", duration.toMillis());
+
+        return author;
+    }
+
+    public Page<Author> getByName(String name, Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching authors by name with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findByNameContainingIgnoreCase(name, pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by name in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getByBirthDateBetween(LocalDate begin, LocalDate end, Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching authors by birth date with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findByBirthDateBetween(begin, end, pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by birth date in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getByLocation(String location, Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching authors by location with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findByLocation(location, pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by location in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getByBookGenre(String genre, Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching authors by genre with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findByBookGenre(genre, pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by genre in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getAllByOrderByNameAsc(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors by name with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAllByOrderByNameAsc(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by name in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getAllByOrderByNameDesc(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors by name with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAllByOrderByNameDesc(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by name in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getAllByOrderByBirthDateAsc(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors by birth date with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAllByOrderByBirthDateAsc(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by birth date in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getAllByOrderByBirthDateDesc(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors by birth date with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAllByOrderByBirthDateDesc(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by birth date in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getAllOrderByBooksCountAsc(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors by book genre with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAllOrderByBooksCountAsc(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by book genre in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getAllOrderByBooksCountDesc(Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching all authors by books count with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findAllOrderByBooksCountDesc(pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by books count in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Author convertToAuthor(AuthorRequest dto) {
+        Author author = new Author();
+        author.setName(dto.getName());
+        author.setBirthDate(dto.getBirthDate());
+        author.setLocation(dto.getLocation());
+        author.setBio(dto.getBio());
+        return author;
+    }
+}

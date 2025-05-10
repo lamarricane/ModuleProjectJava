@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * DTO для вывода книг.
@@ -17,6 +18,7 @@ public class BookDetailsResponse {
     private LocalDate publishingDate;
     private String description;
     private AuthorInfo author;
+    private LocalDateTime addedAt;
 
     @Data
     public static class AuthorInfo {
