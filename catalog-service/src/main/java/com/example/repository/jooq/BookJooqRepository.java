@@ -16,6 +16,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * jOOQ репозиторий для работы с книгами.
+ * Использует типобезопасные запросы jOOQ.
+ */
 @Repository
 public class BookJooqRepository {
     private final DSLContext dsl;
@@ -25,39 +29,39 @@ public class BookJooqRepository {
     }
 
     public Book save(Book book) {
-        Long generatedId = dsl.insertInto(BOOKS)
-                .set(BOOKS.TITLE, book.getTitle())
-                .set(BOOKS.GENRE, book.getGenre())
-                .set(BOOKS.PAGES_NUMBER, book.getPagesNumber())
-                .set(BOOKS.PUBLISHING_DATE, book.getPublishingDate())
-                .set(BOOKS.DESCRIPTION, book.getDescription())
-                .set(BOOKS.AUTHOR_ID, book.getAuthor().getId())
-                .returning(BOOKS.ID)
-                .fetchOne()
-                .get(BOOKS.ID);
+        Author author = book.getAuthor();
+        if (author != null && author.getId() != null) {
+            author = dsl.selectFrom(AUTHORS)
+                    .where(AUTHORS.ID.eq(author.getId()))
+                    .fetchOneInto(Author.class);
+            book.setAuthor(author);
+        }
 
-        book.setId(generatedId);
+        if (book.getId() == null) {
+            Long generatedId = dsl.insertInto(BOOKS)
+                    .set(BOOKS.TITLE, book.getTitle())
+                    .set(BOOKS.GENRE, book.getGenre())
+                    .set(BOOKS.PAGES_NUMBER, book.getPagesNumber())
+                    .set(BOOKS.PUBLISHING_DATE, book.getPublishingDate())
+                    .set(BOOKS.DESCRIPTION, book.getDescription())
+                    .set(BOOKS.AUTHOR_ID, author != null ? author.getId() : null)
+                    .returning(BOOKS.ID)
+                    .fetchOne()
+                    .get(BOOKS.ID);
+
+            book.setId(generatedId);
+        } else {
+            dsl.update(BOOKS)
+                    .set(BOOKS.TITLE, book.getTitle())
+                    .set(BOOKS.GENRE, book.getGenre())
+                    .set(BOOKS.PAGES_NUMBER, book.getPagesNumber())
+                    .set(BOOKS.PUBLISHING_DATE, book.getPublishingDate())
+                    .set(BOOKS.DESCRIPTION, book.getDescription())
+                    .set(BOOKS.AUTHOR_ID, author != null ? author.getId() : null)
+                    .where(BOOKS.ID.eq(book.getId()))
+                    .execute();
+        }
         return book;
-    }
-
-    public Optional<Book> findById(long id) {
-        Book book = dsl.select(BOOKS.fields())
-                .select(AUTHORS.NAME) // Добавляем имя автора в выборку
-                .from(BOOKS)
-                .leftJoin(AUTHORS).on(BOOKS.AUTHOR_ID.eq(AUTHORS.ID))
-                .where(BOOKS.ID.eq(id))
-                .fetchOne(r -> {
-                    Book b = r.into(BOOKS).into(Book.class);
-                    if (r.get(AUTHORS.ID) != null) {
-                        Author author = new Author();
-                        author.setId(r.get(AUTHORS.ID));
-                        author.setName(r.get(AUTHORS.NAME));
-                        b.setAuthor(author);
-                    }
-                    return b;
-                });
-
-        return Optional.ofNullable(book);
     }
 
     public void deleteById(long id) {
@@ -73,6 +77,50 @@ public class BookJooqRepository {
         );
     }
 
+    public Page<Book> findAll(Pageable pageable, org.jooq.SortField<?>... sortFields) {
+        List<Book> books = dsl.selectFrom(BOOKS)
+                .orderBy(sortFields)
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetchInto(Book.class);
+
+        long total = dsl.fetchCount(BOOKS);
+
+        return new PageImpl<>(books, pageable, total);
+    }
+
+    public Optional<Book> findById(long id) {
+        Book book = dsl.select(BOOKS.fields())
+                .select(AUTHORS.fields()) // Загружаем все поля автора
+                .from(BOOKS)
+                .join(AUTHORS).on(BOOKS.AUTHOR_ID.eq(AUTHORS.ID))
+                .where(BOOKS.ID.eq(id))
+                .fetchOne(r -> {
+                    Book b = r.into(BOOKS).into(Book.class);
+                    Author author = r.into(AUTHORS).into(Author.class);
+                    b.setAuthor(author);
+                    return b;
+                });
+
+        return Optional.ofNullable(book);
+    }
+
+    public Page<Book> findByTitleContainingIgnoreCase(String title, Pageable pageable) {
+        List<Book> books = dsl.selectFrom(BOOKS)
+                .where(BOOKS.TITLE.likeIgnoreCase("%" + title + "%"))
+                .orderBy(getSortFields(pageable))
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetchInto(Book.class);
+
+        long total = dsl.fetchCount(
+                dsl.selectFrom(BOOKS)
+                        .where(BOOKS.TITLE.likeIgnoreCase("%" + title + "%"))
+        );
+
+        return new PageImpl<>(books, pageable, total);
+    }
+
     public Page<Book> findByGenre(String genre, Pageable pageable) {
         List<Book> books = dsl.selectFrom(BOOKS)
                 .where(BOOKS.GENRE.eq(genre))
@@ -84,6 +132,22 @@ public class BookJooqRepository {
         long total = dsl.fetchCount(
                 dsl.selectFrom(BOOKS)
                         .where(BOOKS.GENRE.eq(genre))
+        );
+
+        return new PageImpl<>(books, pageable, total);
+    }
+
+    public Page<Book> findByPagesNumberBetween(int minPages, int maxPages, Pageable pageable) {
+        List<Book> books = dsl.selectFrom(BOOKS)
+                .where(BOOKS.PAGES_NUMBER.between(minPages, maxPages))
+                .orderBy(getSortFields(pageable))
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetchInto(Book.class);
+
+        long total = dsl.fetchCount(
+                dsl.selectFrom(BOOKS)
+                        .where(BOOKS.PAGES_NUMBER.between(minPages, maxPages))
         );
 
         return new PageImpl<>(books, pageable, total);
@@ -105,21 +169,7 @@ public class BookJooqRepository {
         return new PageImpl<>(books, pageable, total);
     }
 
-    public Page<Book> findByPagesNumberBetween(int minPages, int maxPages, Pageable pageable) {
-        List<Book> books = dsl.selectFrom(BOOKS)
-                .where(BOOKS.PAGES_NUMBER.between(minPages, maxPages))
-                .orderBy(getSortFields(pageable))
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(Book.class);
 
-        long total = dsl.fetchCount(
-                dsl.selectFrom(BOOKS)
-                        .where(BOOKS.PAGES_NUMBER.between(minPages, maxPages))
-        );
-
-        return new PageImpl<>(books, pageable, total);
-    }
 
     public Page<Book> findByAuthorNameContainingIgnoreCase(String authorName, Pageable pageable) {
         List<Book> books = dsl.select(BOOKS.fields())
@@ -147,22 +197,6 @@ public class BookJooqRepository {
         return new PageImpl<>(books, pageable, total);
     }
 
-    public Page<Book> findByTitleContainingIgnoreCase(String title, Pageable pageable) {
-        List<Book> books = dsl.selectFrom(BOOKS)
-                .where(BOOKS.TITLE.likeIgnoreCase("%" + title + "%"))
-                .orderBy(getSortFields(pageable))
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(Book.class);
-
-        long total = dsl.fetchCount(
-                dsl.selectFrom(BOOKS)
-                        .where(BOOKS.TITLE.likeIgnoreCase("%" + title + "%"))
-        );
-
-        return new PageImpl<>(books, pageable, total);
-    }
-
     public Page<Book> findAllByOrderByTitleAsc(Pageable pageable) {
         return findAll(pageable, BOOKS.TITLE.asc());
     }
@@ -185,18 +219,6 @@ public class BookJooqRepository {
 
     public Page<Book> findAllByOrderByPublishingDateDesc(Pageable pageable) {
         return findAll(pageable, BOOKS.PUBLISHING_DATE.desc());
-    }
-
-    public Page<Book> findAll(Pageable pageable, org.jooq.SortField<?>... sortFields) {
-        List<Book> books = dsl.selectFrom(BOOKS)
-                .orderBy(sortFields)
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(Book.class);
-
-        long total = dsl.fetchCount(BOOKS);
-
-        return new PageImpl<>(books, pageable, total);
     }
 
     private org.jooq.SortField<?>[] getSortFields(Pageable pageable) {

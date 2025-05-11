@@ -3,10 +3,10 @@ package com.example.controller;
 import com.example.dto.BookDetailsResponse;
 import com.example.dto.BookRequest;
 import com.example.model.Book;
-import com.example.service.jdbc.BookJdbcService;
-//import com.example.service.jooq.BookJooqService;
-//import com.example.service.jpa.BookJpaService;
-import com.example.service.jooq.BookJooqService;
+//import com.example.service.BookJpaService;
+import com.example.service.BookJdbcSpecialService;
+import com.example.service.BookJooqSpecialService;
+import com.example.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -29,10 +29,14 @@ import java.util.Map;
 @RequestMapping("/api/catalog/books")
 public class BookController {
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
-    private final BookJooqService bookService;
+    private final BookService bookService;
+    //private final BookJpaService bookSpecialService;
+    private final BookJdbcSpecialService bookSpecialService;
+    //private final BookJooqSpecialService bookSpecialService;
 
-    public BookController(BookJooqService bookService) {
+    public BookController(BookService bookService, BookJdbcSpecialService bookSpecialService) {
         this.bookService = bookService;
+        this.bookSpecialService = bookSpecialService;
     }
 
     @PostMapping
@@ -174,21 +178,21 @@ public class BookController {
 
     @GetMapping("/complex/author-stats")
     public ResponseEntity<List<Map<String, Object>>> getFullAuthorStats() {
-        return ResponseEntity.ok(bookService.getFullAuthorStats());
+        return ResponseEntity.ok(bookSpecialService.getFullAuthorStats());
     }
 
     @GetMapping("/complex/genre-stats")
     public ResponseEntity<List<Map<String, Object>>> getGenreStats() {
-        return ResponseEntity.ok(bookService.getGenreStats());
+        return ResponseEntity.ok(bookSpecialService.getGenreStats());
     }
 
     @GetMapping("/complex/author-stats-summary")
     public ResponseEntity<List<Map<String, Object>>> getAuthorStatsSummary() {
-        return ResponseEntity.ok(bookService.getAuthorStatsSummary());
+        return ResponseEntity.ok(bookSpecialService.getAuthorStatsSummary());
     }
 
     @GetMapping("/complex/author-stats-combined")
     public ResponseEntity<Map<String, Object>> getCombinedAuthorStats() {
-        return ResponseEntity.ok(bookService.getCombinedAuthorStats());
+        return ResponseEntity.ok(bookSpecialService.getCombinedAuthorStats());
     }
 }

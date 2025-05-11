@@ -15,6 +15,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * JDBC репозиторий для работы с авторами.
+ * Реализует базовые CRUD операции и специализированные запросы.
+ */
 @Repository
 public class AuthorJdbcRepository {
     private final JdbcTemplate jdbcTemplate;
@@ -68,10 +72,26 @@ public class AuthorJdbcRepository {
                 author.getId());
     }
 
+    public void deleteById(Long id) {
+        jdbcTemplate.update("DELETE FROM authors WHERE id = ?", id);
+    }
+
+    public boolean existsById(Long id) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM authors WHERE id = ?",
+                Integer.class,
+                id
+        );
+        return count != null && count > 0;
+    }
+
     public Optional<Author> findById(Long id) {
-        String sql = "SELECT * FROM authors WHERE id = ?";
         try {
-            Author author = jdbcTemplate.queryForObject(sql, new AuthorRowMapper(), id);
+            Author author = jdbcTemplate.queryForObject(
+                    "SELECT * FROM authors WHERE id = ?",
+                    new AuthorRowMapper(),
+                    id
+            );
             if (author != null) {
                 loadAuthorBooks(author);
             }
@@ -81,29 +101,18 @@ public class AuthorJdbcRepository {
         }
     }
 
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM authors WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
-
-    public boolean existsById(Long id) {
-        String sql = "SELECT COUNT(*) FROM authors WHERE id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
-        return count != null && count > 0;
-    }
-
-    public Page<Author> findByLocation(String location, Pageable pageable) {
-        String sql = "SELECT * FROM authors WHERE location = ? " +
+    public Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+        String sql = "SELECT * FROM authors WHERE LOWER(name) LIKE LOWER(?) " +
                 "LIMIT ? OFFSET ?";
         List<Author> authors = jdbcTemplate.query(sql, new AuthorRowMapper(),
-                location,
+                "%" + name + "%",
                 pageable.getPageSize(),
                 pageable.getOffset());
 
         authors.forEach(this::loadAuthorBooks);
 
-        String countSql = "SELECT COUNT(*) FROM authors WHERE location = ?";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class, location);
+        String countSql = "SELECT COUNT(*) FROM authors WHERE LOWER(name) LIKE LOWER(?)";
+        int total = jdbcTemplate.queryForObject(countSql, Integer.class, "%" + name + "%");
 
         return new PageImpl<>(authors, pageable, total);
     }
@@ -125,6 +134,22 @@ public class AuthorJdbcRepository {
         return new PageImpl<>(authors, pageable, total);
     }
 
+    public Page<Author> findByLocation(String location, Pageable pageable) {
+        String sql = "SELECT * FROM authors WHERE location = ? " +
+                "LIMIT ? OFFSET ?";
+        List<Author> authors = jdbcTemplate.query(sql, new AuthorRowMapper(),
+                location,
+                pageable.getPageSize(),
+                pageable.getOffset());
+
+        authors.forEach(this::loadAuthorBooks);
+
+        String countSql = "SELECT COUNT(*) FROM authors WHERE location = ?";
+        int total = jdbcTemplate.queryForObject(countSql, Integer.class, location
+        );
+        return new PageImpl<>(authors, pageable, total);
+    }
+
     public Page<Author> findByBookGenre(String genre, Pageable pageable) {
         String sql = "SELECT DISTINCT a.* FROM authors a JOIN books b ON a.id = b.author_id " +
                 "WHERE b.genre = ? LIMIT ? OFFSET ?";
@@ -135,25 +160,9 @@ public class AuthorJdbcRepository {
 
         authors.forEach(this::loadAuthorBooks);
 
-        String countSql = "SELECT COUNT(DISTINCT a.id) FROM authors a JOIN books b ON a.id = b.author_id " +
-                "WHERE b.genre = ?";
+        String countSql = "SELECT COUNT(DISTINCT a.id) FROM authors a JOIN books b ON a.id = b.author_id "
+                + "WHERE b.genre = ?";
         int total = jdbcTemplate.queryForObject(countSql, Integer.class, genre);
-
-        return new PageImpl<>(authors, pageable, total);
-    }
-
-    public Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable) {
-        String sql = "SELECT * FROM authors WHERE LOWER(name) LIKE LOWER(?) " +
-                "LIMIT ? OFFSET ?";
-        List<Author> authors = jdbcTemplate.query(sql, new AuthorRowMapper(),
-                "%" + name + "%",
-                pageable.getPageSize(),
-                pageable.getOffset());
-
-        authors.forEach(this::loadAuthorBooks);
-
-        String countSql = "SELECT COUNT(*) FROM authors WHERE LOWER(name) LIKE LOWER(?)";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class, "%" + name + "%");
 
         return new PageImpl<>(authors, pageable, total);
     }
@@ -186,8 +195,8 @@ public class AuthorJdbcRepository {
 
         authors.forEach(this::loadAuthorBooks);
 
-        String countSql = "SELECT COUNT(*) FROM authors";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class);
+        int total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM authors",
+                Integer.class);
 
         return new PageImpl<>(authors, pageable, total);
     }
@@ -204,8 +213,7 @@ public class AuthorJdbcRepository {
 
         authors.forEach(this::loadAuthorBooks);
 
-        String countSql = "SELECT COUNT(*) FROM authors";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class);
+        int total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM authors", Integer.class);
 
         return new PageImpl<>(authors, pageable, total);
     }
@@ -218,15 +226,17 @@ public class AuthorJdbcRepository {
 
         authors.forEach(this::loadAuthorBooks);
 
-        String countSql = "SELECT COUNT(*) FROM authors";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class);
+        int total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM authors", Integer.class);
 
         return new PageImpl<>(authors, pageable, total);
     }
 
     private void loadAuthorBooks(Author author) {
-        String sql = "SELECT * FROM books WHERE author_id = ?";
-        List<Book> books = jdbcTemplate.query(sql, bookRowMapper, author.getId());
+        List<Book> books = jdbcTemplate.query(
+                "SELECT * FROM books WHERE author_id = ?",
+                bookRowMapper,
+                author.getId()
+        );
         author.setBooks(books);
     }
 }

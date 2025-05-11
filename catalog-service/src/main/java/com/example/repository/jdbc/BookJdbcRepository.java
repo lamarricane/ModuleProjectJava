@@ -1,37 +1,33 @@
 package com.example.repository.jdbc;
 
-import com.example.model.Author;
 import com.example.model.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * JDBC репозиторий для работы с книгами.
+ * Реализует CRUD операции и специализированные запросы для книг.
+ */
 @Repository
 public class BookJdbcRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final BookRowMapper bookRowMapper;
     private final BookWithAuthorRowMapper bookWithAuthorRowMapper;
 
     public BookJdbcRepository(JdbcTemplate jdbcTemplate,
-                              NamedParameterJdbcTemplate namedParameterJdbcTemplate,
-                              BookRowMapper bookRowMapper) {
+                              BookRowMapper bookRowMapper, BookWithAuthorRowMapper bookWithAuthorRowMapper) {
         this.jdbcTemplate = jdbcTemplate;
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.bookRowMapper = bookRowMapper;
-        this.bookWithAuthorRowMapper = new BookWithAuthorRowMapper();
+        this.bookWithAuthorRowMapper = bookWithAuthorRowMapper;
     }
 
     public void save(Book book) {
@@ -69,6 +65,29 @@ public class BookJdbcRepository {
                 book.getId());
     }
 
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM books WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
+
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM books WHERE id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
+    }
+
+    public Page<Book> findAll(Pageable pageable) {
+        String sql = "SELECT b.* FROM books b LIMIT ? OFFSET ?";
+        List<Book> books = jdbcTemplate.query(sql, bookRowMapper,
+                pageable.getPageSize(),
+                pageable.getOffset());
+
+        String countSql = "SELECT COUNT(*) FROM books";
+        int total = jdbcTemplate.queryForObject(countSql, Integer.class);
+
+        return new PageImpl<>(books, pageable, total);
+    }
+
     public Optional<Book> findById(Long id) {
         String sql = "SELECT b.*, a.id as author_id, a.name as author_name, " +
                 "a.birth_date as author_birth_date, a.location as author_location, " +
@@ -82,15 +101,18 @@ public class BookJdbcRepository {
         }
     }
 
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM books WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
+    public Page<Book> findByTitleContainingIgnoreCase(String title, Pageable pageable) {
+        String sql = "SELECT b.* FROM books b WHERE LOWER(title) LIKE LOWER(?) " +
+                "LIMIT ? OFFSET ?";
+        List<Book> books = jdbcTemplate.query(sql, bookRowMapper,
+                "%" + title + "%",
+                pageable.getPageSize(),
+                pageable.getOffset());
 
-    public boolean existsById(Long id) {
-        String sql = "SELECT COUNT(*) FROM books WHERE id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
-        return count != null && count > 0;
+        String countSql = "SELECT COUNT(*) FROM books WHERE LOWER(title) LIKE LOWER(?)";
+        int total = jdbcTemplate.queryForObject(countSql, Integer.class, "%" + title + "%");
+
+        return new PageImpl<>(books, pageable, total);
     }
 
     public Page<Book> findByGenre(String genre, Pageable pageable) {
@@ -103,21 +125,6 @@ public class BookJdbcRepository {
 
         String countSql = "SELECT COUNT(*) FROM books WHERE genre = ?";
         int total = jdbcTemplate.queryForObject(countSql, Integer.class, genre);
-
-        return new PageImpl<>(books, pageable, total);
-    }
-
-    public Page<Book> findByPublishingDateBetween(LocalDate lowBound, LocalDate highBound, Pageable pageable) {
-        String sql = "SELECT b.* FROM books b WHERE publishing_date BETWEEN ? AND ? " +
-                "LIMIT ? OFFSET ?";
-        List<Book> books = jdbcTemplate.query(sql, bookRowMapper,
-                lowBound,
-                highBound,
-                pageable.getPageSize(),
-                pageable.getOffset());
-
-        String countSql = "SELECT COUNT(*) FROM books WHERE publishing_date BETWEEN ? AND ?";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class, lowBound, highBound);
 
         return new PageImpl<>(books, pageable, total);
     }
@@ -137,6 +144,21 @@ public class BookJdbcRepository {
         return new PageImpl<>(books, pageable, total);
     }
 
+    public Page<Book> findByPublishingDateBetween(LocalDate lowBound, LocalDate highBound, Pageable pageable) {
+        String sql = "SELECT b.* FROM books b WHERE publishing_date BETWEEN ? AND ? " +
+                "LIMIT ? OFFSET ?";
+        List<Book> books = jdbcTemplate.query(sql, bookRowMapper,
+                lowBound,
+                highBound,
+                pageable.getPageSize(),
+                pageable.getOffset());
+
+        String countSql = "SELECT COUNT(*) FROM books WHERE publishing_date BETWEEN ? AND ?";
+        int total = jdbcTemplate.queryForObject(countSql, Integer.class, lowBound, highBound);
+
+        return new PageImpl<>(books, pageable, total);
+    }
+
     public Page<Book> findByAuthorNameContainingIgnoreCase(String authorName, Pageable pageable) {
         String sql = "SELECT b.* FROM books b JOIN authors a ON b.author_id = a.id " +
                 "WHERE LOWER(a.name) LIKE LOWER(?) " +
@@ -149,20 +171,6 @@ public class BookJdbcRepository {
         String countSql = "SELECT COUNT(*) FROM books b JOIN authors a ON b.author_id = a.id " +
                 "WHERE LOWER(a.name) LIKE LOWER(?)";
         int total = jdbcTemplate.queryForObject(countSql, Integer.class, "%" + authorName + "%");
-
-        return new PageImpl<>(books, pageable, total);
-    }
-
-    public Page<Book> findByTitleContainingIgnoreCase(String title, Pageable pageable) {
-        String sql = "SELECT b.* FROM books b WHERE LOWER(title) LIKE LOWER(?) " +
-                "LIMIT ? OFFSET ?";
-        List<Book> books = jdbcTemplate.query(sql, bookRowMapper,
-                "%" + title + "%",
-                pageable.getPageSize(),
-                pageable.getOffset());
-
-        String countSql = "SELECT COUNT(*) FROM books WHERE LOWER(title) LIKE LOWER(?)";
-        int total = jdbcTemplate.queryForObject(countSql, Integer.class, "%" + title + "%");
 
         return new PageImpl<>(books, pageable, total);
     }
@@ -282,28 +290,5 @@ public class BookJdbcRepository {
         result.put("avgBooksPerAuthor", avgBooks);
 
         return result;
-    }
-
-    private static final class BookWithAuthorRowMapper implements RowMapper<Book> {
-        @Override
-        public Book mapRow(ResultSet rs, int rowNum) throws SQLException {
-            Book book = new Book();
-            book.setId(rs.getLong("id"));
-            book.setTitle(rs.getString("title"));
-            book.setGenre(rs.getString("genre"));
-            book.setPagesNumber(rs.getInt("pages_number"));
-            book.setPublishingDate(rs.getObject("publishing_date", LocalDate.class));
-            book.setDescription(rs.getString("description"));
-
-            Author author = new Author();
-            author.setId(rs.getLong("author_id"));
-            author.setName(rs.getString("author_name"));
-            author.setBirthDate(rs.getObject("author_birth_date", LocalDate.class));
-            author.setLocation(rs.getString("author_location"));
-            author.setBio(rs.getString("author_bio"));
-
-            book.setAuthor(author);
-            return book;
-        }
     }
 }

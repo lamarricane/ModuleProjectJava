@@ -16,6 +16,10 @@ import java.util.Optional;
 import static org.jooq.generated.Tables.AUTHORS;
 import static org.jooq.generated.Tables.BOOKS;
 
+/**
+ * jOOQ репозиторий для работы с авторами.
+ * Использует типобезопасные запросы jOOQ.
+ */
 @Repository
 public class AuthorJooqRepository {
     private final DSLContext dsl;
@@ -38,14 +42,6 @@ public class AuthorJooqRepository {
         return author;
     }
 
-    public Optional<Author> findById(long id) {
-        Author author = dsl.selectFrom(AUTHORS)
-                .where(AUTHORS.ID.eq(id))
-                .fetchOneInto(Author.class);
-        loadAuthorBooks(author);
-        return Optional.ofNullable(author);
-    }
-
     public void deleteById(long id) {
         dsl.deleteFrom(AUTHORS)
                 .where(AUTHORS.ID.eq(id))
@@ -59,9 +55,30 @@ public class AuthorJooqRepository {
         );
     }
 
-    public Page<Author> findByLocation(String location, Pageable pageable) {
+    public Page<Author> findAll(Pageable pageable, org.jooq.SortField<?>... sortFields) {
         List<Author> authors = dsl.selectFrom(AUTHORS)
-                .where(AUTHORS.LOCATION.eq(location))
+                .orderBy(sortFields)
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetchInto(Author.class);
+
+        authors.forEach(this::loadAuthorBooks);
+
+        long total = dsl.fetchCount(AUTHORS);
+        return new PageImpl<>(authors, pageable, total);
+    }
+
+    public Optional<Author> findById(long id) {
+        Author author = dsl.selectFrom(AUTHORS)
+                .where(AUTHORS.ID.eq(id))
+                .fetchOneInto(Author.class);
+        loadAuthorBooks(author);
+        return Optional.ofNullable(author);
+    }
+
+    public Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+        List<Author> authors = dsl.selectFrom(AUTHORS)
+                .where(AUTHORS.NAME.likeIgnoreCase("%" + name + "%"))
                 .orderBy(getSortFields(pageable))
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
@@ -71,7 +88,7 @@ public class AuthorJooqRepository {
 
         long total = dsl.fetchCount(
                 dsl.selectFrom(AUTHORS)
-                        .where(AUTHORS.LOCATION.eq(location))
+                        .where(AUTHORS.NAME.likeIgnoreCase("%" + name + "%"))
         );
 
         return new PageImpl<>(authors, pageable, total);
@@ -90,6 +107,24 @@ public class AuthorJooqRepository {
         long total = dsl.fetchCount(
                 dsl.selectFrom(AUTHORS)
                         .where(AUTHORS.BIRTH_DATE.between(lowBound, highBound))
+        );
+
+        return new PageImpl<>(authors, pageable, total);
+    }
+
+    public Page<Author> findByLocation(String location, Pageable pageable) {
+        List<Author> authors = dsl.selectFrom(AUTHORS)
+                .where(AUTHORS.LOCATION.eq(location))
+                .orderBy(getSortFields(pageable))
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetchInto(Author.class);
+
+        authors.forEach(this::loadAuthorBooks);
+
+        long total = dsl.fetchCount(
+                dsl.selectFrom(AUTHORS)
+                        .where(AUTHORS.LOCATION.eq(location))
         );
 
         return new PageImpl<>(authors, pageable, total);
@@ -117,24 +152,6 @@ public class AuthorJooqRepository {
         return new PageImpl<>(authors, pageable, total);
     }
 
-    public Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable) {
-        List<Author> authors = dsl.selectFrom(AUTHORS)
-                .where(AUTHORS.NAME.likeIgnoreCase("%" + name + "%"))
-                .orderBy(getSortFields(pageable))
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(Author.class);
-
-        authors.forEach(this::loadAuthorBooks);
-
-        long total = dsl.fetchCount(
-                dsl.selectFrom(AUTHORS)
-                        .where(AUTHORS.NAME.likeIgnoreCase("%" + name + "%"))
-        );
-
-        return new PageImpl<>(authors, pageable, total);
-    }
-
     public Page<Author> findAllByOrderByNameAsc(Pageable pageable) {
         return findAll(pageable, AUTHORS.NAME.asc());
     }
@@ -157,19 +174,6 @@ public class AuthorJooqRepository {
 
     public Page<Author> findAllOrderByBooksCountDesc(Pageable pageable) {
         return findAllOrderByBooksCount(pageable, DSL.count(BOOKS.ID).desc());
-    }
-
-    public Page<Author> findAll(Pageable pageable, org.jooq.SortField<?>... sortFields) {
-        List<Author> authors = dsl.selectFrom(AUTHORS)
-                .orderBy(sortFields)
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetchInto(Author.class);
-
-        authors.forEach(this::loadAuthorBooks);
-
-        long total = dsl.fetchCount(AUTHORS);
-        return new PageImpl<>(authors, pageable, total);
     }
 
     private Page<Author> findAllOrderByBooksCount(Pageable pageable, org.jooq.SortField<?> sortField) {

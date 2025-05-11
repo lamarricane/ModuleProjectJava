@@ -2,9 +2,7 @@ package com.example.controller;
 
 import com.example.dto.AuthorRequest;
 import com.example.model.Author;
-import com.example.service.jdbc.AuthorJdbcService;
-import com.example.service.jooq.AuthorJooqService;
-import com.example.service.jpa.AuthorJpaService;
+import com.example.service.AuthorService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -24,11 +22,9 @@ import java.time.LocalDate;
 @RequestMapping("/api/catalog/authors")
 public class AuthorController {
     private static final Logger logger = LoggerFactory.getLogger(AuthorController.class);
-    //private final AuthorJpaService authorJpaService;
-    //private final AuthorJdbcService authorJdbcService;
-    private final AuthorJooqService authorService;
+    private final AuthorService authorService;
 
-    public AuthorController(AuthorJooqService authorService) {
+    public AuthorController(AuthorService authorService) {
         this.authorService = authorService;
     }
 

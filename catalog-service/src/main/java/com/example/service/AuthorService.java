@@ -1,8 +1,10 @@
-package com.example.service.jdbc;
+package com.example.service;
 
 import com.example.dto.AuthorRequest;
 import com.example.model.Author;
 import com.example.repository.jdbc.AuthorJdbcRepository;
+import com.example.repository.jooq.AuthorJooqRepository;
+import com.example.repository.jpa.AuthorJpaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +17,18 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
+/**
+ * Сервис для работы с авторами.
+ * Обеспечивает бизнес-логику и транзакционность операций.
+ */
 @Service
-public class AuthorJdbcService {
-    private static final Logger logger = LoggerFactory.getLogger(AuthorJdbcService.class);
+public class AuthorService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthorService.class);
+    //private final AuthorJpaRepository authorRepository;
     private final AuthorJdbcRepository authorRepository;
+    //private final AuthorJooqRepository authorRepository;
 
-    public AuthorJdbcService(AuthorJdbcRepository authorRepository) {
+    public AuthorService(AuthorJdbcRepository authorRepository) {
         this.authorRepository = authorRepository;
     }
 
@@ -108,6 +116,30 @@ public class AuthorJdbcService {
         return author;
     }
 
+    public Page<Author> getByName(String name, Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching authors by name with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findByNameContainingIgnoreCase(name, pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by name in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
+    public Page<Author> getByBirthDateBetween(LocalDate begin, LocalDate end, Pageable pageable) {
+        Instant start = Instant.now();
+        logger.debug("Fetching authors by birth date with pagination: {}", pageable);
+
+        Page<Author> authors = authorRepository.findByBirthDateBetween(begin, end, pageable);
+
+        Duration duration = Duration.between(start, Instant.now());
+        logger.debug("Fetched {} authors by birth date in {} ms", authors.getTotalElements(), duration.toMillis());
+
+        return authors;
+    }
+
     public Page<Author> getByLocation(String location, Pageable pageable) {
         Instant start = Instant.now();
         logger.debug("Fetching authors by location with pagination: {}", pageable);
@@ -128,30 +160,6 @@ public class AuthorJdbcService {
 
         Duration duration = Duration.between(start, Instant.now());
         logger.debug("Fetched {} authors by genre in {} ms", authors.getTotalElements(), duration.toMillis());
-
-        return authors;
-    }
-
-    public Page<Author> getByBirthDateBetween(LocalDate begin, LocalDate end, Pageable pageable) {
-        Instant start = Instant.now();
-        logger.debug("Fetching authors by birth date with pagination: {}", pageable);
-
-        Page<Author> authors = authorRepository.findByBirthDateBetween(begin, end, pageable);
-
-        Duration duration = Duration.between(start, Instant.now());
-        logger.debug("Fetched {} authors by birth date in {} ms", authors.getTotalElements(), duration.toMillis());
-
-        return authors;
-    }
-
-    public Page<Author> getByNameContainingIgnoreCase(String name, Pageable pageable) {
-        Instant start = Instant.now();
-        logger.debug("Fetching authors by name with pagination: {}", pageable);
-
-        Page<Author> authors = authorRepository.findByNameContainingIgnoreCase(name, pageable);
-
-        Duration duration = Duration.between(start, Instant.now());
-        logger.debug("Fetched {} authors by name in {} ms", authors.getTotalElements(), duration.toMillis());
 
         return authors;
     }
